@@ -1,6 +1,6 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
-import { createShorturl, getUrlStats} from "../controllers/url.controller.js";
+import { createShorturl, getClicksByCountry, getClicksOverTime, getUrlStats} from "../controllers/url.controller.js";
 
 const router = Router();
 const createLimiter = rateLimit({
@@ -12,6 +12,8 @@ const createLimiter = rateLimit({
 
 router.post("/",createLimiter, createShorturl)
 router.get("/stats/:id",getUrlStats);
+router.get("/stats/:id/geo",getClicksByCountry);
+router.get("/stats/:id/timeseries",getClicksOverTime)
 
 
 

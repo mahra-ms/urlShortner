@@ -15,6 +15,7 @@ requiredEnv.forEach((key) => {
 });
 
 const app = express();
+app.set("trust proxy", 1);
 app.use(express.json());
 
 app.use("/api/v1", urlRoutes);
