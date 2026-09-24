@@ -16,7 +16,7 @@ requiredEnv.forEach((key) => {
 
 const app = express();
 app.set("trust proxy", 1);
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 
 app.use("/api/v1", urlRoutes);
 app.get("/:id", getMyUrl);

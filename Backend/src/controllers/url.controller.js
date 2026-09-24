@@ -3,6 +3,19 @@ import Click from "../models/click.model.js";
 import { nanoid } from "nanoid";
 import geoip from "geoip-lite";
 
+const BASE_URL = process.env.APP_URL.endsWith("/")
+  ? process.env.APP_URL
+  : `${process.env.APP_URL}/`;
+
+function isAllowedUrl(value) {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export async function createShorturl(req, res) {
   try {
     const { url } = req.body;
@@ -12,13 +25,8 @@ export async function createShorturl(req, res) {
         message: "URL is required",
       });
     }
-
-    try {
-      new URL(url);
-    } catch {
-      return res.status(400).json({
-        message: "Invalid URL",
-      });
+    if (!isAllowedUrl(url)) {
+      return res.status(400).json({ message: "Invalid URL" });
     }
 
     const existing = await ShortUrl.findOne({ originalUrl: url });
@@ -29,20 +37,24 @@ export async function createShorturl(req, res) {
       });
     }
 
-    const shortID = nanoid(7);
-
-    const newShortUrl = await ShortUrl.create({
-      originalUrl: url,
-      shortUrl: shortID,
-    });
-
-    return res.status(201).json({
-      success: true,
-      shortUrl: `${process.env.APP_URL}${shortID}`,
-    });
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const shortID = nanoid(7);
+      try {
+        await ShortUrl.create({ originalUrl: url, shortUrl: shortId });
+        return res.status(201).json({
+          success: true,
+          shortUrl: `{BASE_URL}${shortID}`,
+        });
+      } catch (err) {
+        if (err.code === 11000) continue;
+        throw err;
+      }
+    }
+    return res
+      .status(500)
+      .json({ message: "Unable to generate a unique short URL, try again" });
   } catch (error) {
     console.error(error);
-
     return res.status(500).json({
       message: "Unable to create short URL",
     });
@@ -56,15 +68,14 @@ export const getMyUrl = async (req, res) => {
     const url = await ShortUrl.findOneAndUpdate(
       { shortUrl: id },
       { $inc: { clicks: 1 } },
-      { returnDocument: "after"},
+      { returnDocument: "after" },
     );
 
     if (!url) {
       return res.status(404).send("Not Found");
     }
 
-    const ip = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.ip;
-    const geo = geoip.lookup(ip);
+    const geo = geoip.lookup(req.ip);
 
     Click.create({
       shortUrl: id,
@@ -126,36 +137,35 @@ export const getClicksByCountry = async (req, res) => {
   }
 };
 
-export const getClicksOverTime = async(req,res) =>{
-  try{
-    const {id} = req.params;
-    const{period = "week"} = req.query;
-    const dateFormat = period === "month"? "%Y-%m" : "%Y-%U";
+export const getClicksOverTime = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { period = "week" } = req.query;
+    const dateFormat = period === "month" ? "%Y-%m" : "%Y-%U";
 
     const breakdown = await Click.aggregate([
-       { $match: { shortUrl: id } },
-       {
+      { $match: { shortUrl: id } },
+      {
         $group: {
           _id: { $dateToString: { format: dateFormat, date: "$clickedAt" } },
           count: { $sum: 1 },
         },
-        },
+      },
       { $sort: { _id: 1 } },
     ]);
 
     return res.status(200).json({
-      success : true,
+      success: true,
       period,
-      data : breakdown.map((b) =>({
-        period : b._id,
-        clicks: b.count
-      }))
-    })
-  }
-  catch(error){
+      data: breakdown.map((b) => ({
+        period: b._id,
+        clicks: b.count,
+      })),
+    });
+  } catch (error) {
     console.error(error);
-    return res.status(500).json({ 
-      message: "server error" 
+    return res.status(500).json({
+      message: "server error",
     });
   }
-}
+};

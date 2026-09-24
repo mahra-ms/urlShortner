@@ -9,11 +9,17 @@ const createLimiter = rateLimit({
   message: { message: "Too many links created, try again later" },
 });
 
+const readLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: { message: "Too many requests, try again later" },
+});
+
 
 router.post("/",createLimiter, createShorturl)
-router.get("/stats/:id",getUrlStats);
-router.get("/stats/:id/geo",getClicksByCountry);
-router.get("/stats/:id/timeseries",getClicksOverTime)
+router.get("/stats/:id",readLimiter,getUrlStats);
+router.get("/stats/:id/geo",readLimiter,getClicksByCountry);
+router.get("/stats/:id/timeseries",readLimiter,getClicksOverTime)
 
 
 

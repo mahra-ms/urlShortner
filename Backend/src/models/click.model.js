@@ -20,5 +20,7 @@ const clickSchema = new mongoose.Schema({
   },
 });
 
+clickSchema.index({ shortUrl: 1, clickedAt: 1 });
+
 const Click = mongoose.model("Click", clickSchema);
 export default Click;
