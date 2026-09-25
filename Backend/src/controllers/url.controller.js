@@ -3,9 +3,7 @@ import Click from "../models/click.model.js";
 import { nanoid } from "nanoid";
 import geoip from "geoip-lite";
 
-const BASE_URL = process.env.APP_URL.endsWith("/")
-  ? process.env.APP_URL
-  : `${process.env.APP_URL}/`;
+const BASE_URL =  process.env.APP_URL;
 
 function isAllowedUrl(value) {
   try {
@@ -40,7 +38,7 @@ export async function createShorturl(req, res) {
     for (let attempt = 0; attempt < 3; attempt++) {
       const shortID = nanoid(7);
       try {
-        await ShortUrl.create({ originalUrl: url, shortUrl: shortId });
+        await ShortUrl.create({ originalUrl: url, shortUrl: shortID });
         return res.status(201).json({
           success: true,
           shortUrl: `{BASE_URL}${shortID}`,
@@ -140,8 +138,21 @@ export const getClicksByCountry = async (req, res) => {
 export const getClicksOverTime = async (req, res) => {
   try {
     const { id } = req.params;
-    const { period = "week" } = req.query;
-    const dateFormat = period === "month" ? "%Y-%m" : "%Y-%U";
+    const { period = "day" } = req.query;
+     const validPeriods = {
+      day: "%Y-%m-%d",     // e.g. 2026-09-24
+      week: "%G-W%V",      // e.g. 2026-W39 (ISO week, unambiguous)
+      month: "%Y-%m",      // e.g. 2026-09
+    };
+    if (!validPeriods[period]) {
+      return res.status(400).json({
+        message: `Invalid period. Use one of: ${Object.keys(validPeriods).join(", ")}`,
+      });
+    }
+    const exists = await ShortUrl.exists({ shortUrl: id });
+    if (!exists) {
+      return res.status(404).json({ message: "short url not found" });
+    }
 
     const breakdown = await Click.aggregate([
       { $match: { shortUrl: id } },
