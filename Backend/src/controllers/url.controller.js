@@ -31,7 +31,7 @@ export async function createShorturl(req, res) {
     if (existing) {
       return res.status(200).json({
         success: true,
-        shortUrl: `${process.env.APP_URL}${existing.shortUrl}`,
+        shortUrl: `${BASE_URL}/${existing.shortUrl}`,
       });
     }
 
@@ -41,7 +41,7 @@ export async function createShorturl(req, res) {
         await ShortUrl.create({ originalUrl: url, shortUrl: shortID });
         return res.status(201).json({
           success: true,
-          shortUrl: `{BASE_URL}${shortID}`,
+          shortUrl: `${BASE_URL}/${shortID}`,
         });
       } catch (err) {
         if (err.code === 11000) continue;
@@ -102,7 +102,7 @@ export const getUrlStats = async (req, res) => {
       success: true,
       data: {
         originalUrl: url.originalUrl,
-        shortUrl: `${process.env.APP_URL}${url.shortUrl}`,
+        shortUrl: `${BASE_URL}/${url.shortUrl}`,
         clicks: url.clicks,
         createdAt: url.createdAt,
         updatedAt: url.updatedAt,
@@ -158,7 +158,7 @@ export const getClicksOverTime = async (req, res) => {
       { $match: { shortUrl: id } },
       {
         $group: {
-          _id: { $dateToString: { format: dateFormat, date: "$clickedAt" } },
+          _id: { $dateToString: { format: validPeriods[period], date: "$clickedAt" } },
           count: { $sum: 1 },
         },
       },
