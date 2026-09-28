@@ -1,11 +1,11 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import express from "express";
 
 import connectDb from "./config/db.js";
 import urlRoutes from "./routes/url.routes.js";
 import { getMyUrl } from "./controllers/url.controller.js";
 
-dotenv.config();
+
 
 const requiredEnv = ["MONGO_URI", "APP_URL", "PORT"];
 requiredEnv.forEach((key) => {
