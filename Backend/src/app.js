@@ -4,10 +4,11 @@ import express from "express";
 import connectDb from "./config/db.js";
 import urlRoutes from "./routes/url.routes.js";
 import { getMyUrl } from "./controllers/url.controller.js";
+import authRoutes from "./routes/auth.routes.js";
 
 
 
-const requiredEnv = ["MONGO_URI", "APP_URL", "PORT"];
+const requiredEnv = ["MONGO_URI", "APP_URL", "PORT", "JWT_SECRET"];
 requiredEnv.forEach((key) => {
   if (!process.env[key]) {
     throw new Error(`Missing required env var: ${key}`);
@@ -18,6 +19,7 @@ const app = express();
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "10kb" }));
 
+app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1", urlRoutes);
 app.get("/:id", getMyUrl);
 

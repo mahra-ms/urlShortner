@@ -15,16 +15,22 @@ const shortUrlSchema = new mongoose.Schema(
       index: true,
       trim: true,
     },
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null, 
+      index: true,
+    },
 
     clicks: {
       type: Number,
       required: true,
-      default: 0
-    }
+      default: 0,
+    },
   },
   {
-    timestamps: true
-  }
+    timestamps: true,
+  },
 );
 
 const ShortUrl = mongoose.model("ShortUrl", shortUrlSchema);
