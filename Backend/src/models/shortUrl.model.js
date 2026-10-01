@@ -12,7 +12,6 @@ const shortUrlSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-      index: true,
       trim: true,
     },
     owner: {
@@ -26,6 +25,12 @@ const shortUrlSchema = new mongoose.Schema(
       type: Number,
       required: true,
       default: 0,
+      
+    },
+    claimTokenHash: {
+      type: String,
+      default: undefined,
+      select: false,
     },
   },
   {
@@ -33,6 +38,7 @@ const shortUrlSchema = new mongoose.Schema(
   },
 );
 
+shortUrlSchema.index({ owner: 1, originalUrl: 1 });
 const ShortUrl = mongoose.model("ShortUrl", shortUrlSchema);
 
 export default ShortUrl;

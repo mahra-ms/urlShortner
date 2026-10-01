@@ -9,7 +9,6 @@ const BASE_URL = process.env.APP_URL;
 const hashToken = (token) =>
   crypto.createHash("sha256").update(token).digest("hex");
 
-// Returns the URL only if it belongs to the logged-in user
 async function findOwnedUrl(shortId, userId) {
   return ShortUrl.findOne({ shortUrl: shortId, owner: userId });
 }
@@ -23,7 +22,7 @@ function isAllowedUrl(value) {
   }
 }
 
-// ---------- CREATE (public; owner set if logged in) ----------
+
 export async function createShorturl(req, res) {
   try {
     const { url } = req.body;
@@ -37,8 +36,7 @@ export async function createShorturl(req, res) {
 
     const ownerId = req.user?.id || null;
 
-    // Only dedupe for logged-in users. Anonymous users always get a fresh link,
-    // because the claim token can only be shown once, at creation time.
+
     if (ownerId) {
       const existing = await ShortUrl.findOne({
         originalUrl: url,
@@ -52,7 +50,7 @@ export async function createShorturl(req, res) {
       }
     }
 
-    // Anonymous links get a secret claim token (only its hash is stored)
+  
     const claimToken = ownerId ? null : crypto.randomBytes(16).toString("hex");
     const claimTokenHash = claimToken ? hashToken(claimToken) : undefined;
 
@@ -69,7 +67,7 @@ export async function createShorturl(req, res) {
         return res.status(201).json({
           success: true,
           shortUrl: `${BASE_URL}/${shortID}`,
-          ...(claimToken && { claimToken }), // only for anonymous links
+          ...(claimToken && { claimToken }), 
         });
       } catch (err) {
         if (err.code === 11000) continue;
@@ -86,7 +84,7 @@ export async function createShorturl(req, res) {
   }
 }
 
-// ---------- REDIRECT (public) ----------
+
 export const getMyUrl = async (req, res) => {
   try {
     const { id } = req.params;
@@ -116,7 +114,7 @@ export const getMyUrl = async (req, res) => {
   }
 };
 
-// ---------- CLAIM an anonymous link (login required) ----------
+
 export const claimUrl = async (req, res) => {
   try {
     const { shortId, claimToken } = req.body;
@@ -126,7 +124,7 @@ export const claimUrl = async (req, res) => {
         .json({ message: "shortId and claimToken are required" });
     }
 
-    // Filter only matches a link that is still unowned AND has the right token
+
     const url = await ShortUrl.findOneAndUpdate(
       { shortUrl: shortId, owner: null, claimTokenHash: hashToken(claimToken) },
       { $set: { owner: req.user.id }, $unset: { claimTokenHash: 1 } },
@@ -148,7 +146,7 @@ export const claimUrl = async (req, res) => {
   }
 };
 
-// ---------- LIST my links (login required) ----------
+
 export const getMyUrls = async (req, res) => {
   try {
     const urls = await ShortUrl.find({ owner: req.user.id })
@@ -170,7 +168,7 @@ export const getMyUrls = async (req, res) => {
   }
 };
 
-// ---------- ANALYTICS (login required, owner only) ----------
+
 export const getUrlStats = async (req, res) => {
   try {
     const { id } = req.params;
@@ -197,7 +195,7 @@ export const getUrlStats = async (req, res) => {
 
 export const getClicksByCountry = async (req, res) => {
   try {
-    const { id } = req.params; // read id BEFORE using it
+    const { id } = req.params; 
     const owned = await findOwnedUrl(id, req.user.id);
     if (!owned) {
       return res.status(404).json({ message: "short url not found" });
@@ -228,9 +226,9 @@ export const getClicksOverTime = async (req, res) => {
     const { period = "day" } = req.query;
 
     const validPeriods = {
-      day: "%Y-%m-%d", // e.g. 2026-09-24
-      week: "%G-W%V", // e.g. 2026-W39 (ISO week)
-      month: "%Y-%m", // e.g. 2026-09
+      day: "%Y-%m-%d", 
+      week: "%G-W%V", 
+      month: "%Y-%m", 
     };
     if (!validPeriods[period]) {
       return res.status(400).json({

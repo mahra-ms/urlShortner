@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 12);
 
 const signToken = (userId) =>
   jwt.sign({ sub: userId }, process.env.JWT_SECRET, {
@@ -16,10 +17,14 @@ export const signup = async (req, res) => {
     if (typeof email !== "string" || !EMAIL_RE.test(email)) {
       return res.status(400).json({ message: "Valid email is required" });
     }
-    if (typeof password !== "string" || password.length < 8) {
+    if (
+      typeof password !== "string" ||
+      password.length < 8 ||
+      password.length > 72
+    ) {
       return res
         .status(400)
-        .json({ message: "Password must be at least 8 characters" });
+        .json({ message: "Password must be 8-72 characters" });
     }
 
     const hashed = await bcrypt.hash(password, 12);
@@ -49,11 +54,11 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase() }).select(
       "+password",
     );
-    const ok = user && (await bcrypt.compare(password, user.password));
-    if (!ok) {
+    const hash = user ? user.password : DUMMY_HASH;
+    const match = await bcrypt.compare(password, hash);
+    if (!user || !match) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-
     return res.status(200).json({
       success: true,
       token: signToken(user._id),
@@ -66,7 +71,15 @@ export const login = async (req, res) => {
 };
 
 export const me = async (req, res) => {
-  const user = await User.findById(req.user.id);
-  if (!user) return res.status(401).json({ message: "User not found" });
-  res.json({ success: true, user: { id: user._id, name: user.name, email: user.email } });
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(401).json({ message: "User not found" });
+    return res.json({
+      success: true,
+      user: { id: user._id, name: user.name, email: user.email },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
 };

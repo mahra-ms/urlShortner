@@ -2,6 +2,7 @@ import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import {
   createShorturl,
+  claimUrl,            
   getClicksByCountry,
   getClicksOverTime,
   getUrlStats,
@@ -21,7 +22,8 @@ const readLimiter = rateLimit({
   message: { message: "Too many requests, try again later" },
 });
 
-router.post("/", createLimiter, optionalAuth, createShorturl); // public
+router.post("/", createLimiter, optionalAuth, createShorturl);
+router.post("/claim", readLimiter, requireAuth, claimUrl); // public
 router.get("/my-urls", readLimiter, requireAuth, getMyUrls);   // login required
 router.get("/stats/:id", readLimiter, requireAuth, getUrlStats);
 router.get("/stats/:id/geo", readLimiter, requireAuth, getClicksByCountry);
