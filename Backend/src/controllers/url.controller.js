@@ -13,15 +13,19 @@ async function findOwnedUrl(shortId, userId) {
   return ShortUrl.findOne({ shortUrl: shortId, owner: userId });
 }
 
+const APP_HOST = new URL(process.env.APP_URL).hostname;
+
 function isAllowedUrl(value) {
   try {
     const parsed = new URL(value);
-    return parsed.protocol === "http:" || parsed.protocol === "https:";
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:")
+      return false;
+    if (parsed.hostname === APP_HOST) return false; // prevents redirect loops
+    return true;
   } catch {
     return false;
   }
 }
-
 
 export async function createShorturl(req, res) {
   try {
@@ -36,7 +40,6 @@ export async function createShorturl(req, res) {
 
     const ownerId = req.user?.id || null;
 
-
     if (ownerId) {
       const existing = await ShortUrl.findOne({
         originalUrl: url,
@@ -50,7 +53,6 @@ export async function createShorturl(req, res) {
       }
     }
 
-  
     const claimToken = ownerId ? null : crypto.randomBytes(16).toString("hex");
     const claimTokenHash = claimToken ? hashToken(claimToken) : undefined;
 
@@ -67,10 +69,24 @@ export async function createShorturl(req, res) {
         return res.status(201).json({
           success: true,
           shortUrl: `${BASE_URL}/${shortID}`,
-          ...(claimToken && { claimToken }), 
+          ...(claimToken && { claimToken }),
         });
       } catch (err) {
-        if (err.code === 11000) continue;
+        if (err.code === 11000) {
+          if (ownerId) {
+            const dup = await ShortUrl.findOne({
+              originalUrl: url,
+              owner: ownerId,
+            });
+            if (dup) {
+              return res.status(200).json({
+                success: true,
+                shortUrl: `${BASE_URL}/${dup.shortUrl}`,
+              });
+            }
+          }
+          continue; 
+        }
         throw err;
       }
     }
@@ -84,10 +100,12 @@ export async function createShorturl(req, res) {
   }
 }
 
-
 export const getMyUrl = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!/^[A-Za-z0-9_-]{7}$/.test(id)) {
+      return res.status(404).send("Not Found");
+    }
 
     const url = await ShortUrl.findOneAndUpdate(
       { shortUrl: id },
@@ -114,7 +132,6 @@ export const getMyUrl = async (req, res) => {
   }
 };
 
-
 export const claimUrl = async (req, res) => {
   try {
     const { shortId, claimToken } = req.body;
@@ -123,7 +140,6 @@ export const claimUrl = async (req, res) => {
         .status(400)
         .json({ message: "shortId and claimToken are required" });
     }
-
 
     const url = await ShortUrl.findOneAndUpdate(
       { shortUrl: shortId, owner: null, claimTokenHash: hashToken(claimToken) },
@@ -146,7 +162,6 @@ export const claimUrl = async (req, res) => {
   }
 };
 
-
 export const getMyUrls = async (req, res) => {
   try {
     const urls = await ShortUrl.find({ owner: req.user.id })
@@ -167,7 +182,6 @@ export const getMyUrls = async (req, res) => {
     return res.status(500).json({ message: "server error" });
   }
 };
-
 
 export const getUrlStats = async (req, res) => {
   try {
@@ -195,7 +209,7 @@ export const getUrlStats = async (req, res) => {
 
 export const getClicksByCountry = async (req, res) => {
   try {
-    const { id } = req.params; 
+    const { id } = req.params;
     const owned = await findOwnedUrl(id, req.user.id);
     if (!owned) {
       return res.status(404).json({ message: "short url not found" });
@@ -226,9 +240,9 @@ export const getClicksOverTime = async (req, res) => {
     const { period = "day" } = req.query;
 
     const validPeriods = {
-      day: "%Y-%m-%d", 
-      week: "%G-W%V", 
-      month: "%Y-%m", 
+      day: "%Y-%m-%d",
+      week: "%G-W%V",
+      month: "%Y-%m",
     };
     if (!validPeriods[period]) {
       return res.status(400).json({

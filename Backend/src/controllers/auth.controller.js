@@ -7,6 +7,7 @@ const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 12);
 
 const signToken = (userId) =>
   jwt.sign({ sub: userId }, process.env.JWT_SECRET, {
+    algorithm: "HS256",
     expiresIn: process.env.JWT_EXPIRES_IN || "7d",
   });
 
@@ -14,7 +15,14 @@ export const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    if (typeof email !== "string" || !EMAIL_RE.test(email)) {
+    if (name !== undefined && (typeof name !== "string" || name.length > 100)) {
+      return res.status(400).json({ message: "Invalid name" });
+    }
+    if (
+      typeof email !== "string" ||
+      email.length > 254 ||
+      !EMAIL_RE.test(email)
+    ) {
       return res.status(400).json({ message: "Valid email is required" });
     }
     if (

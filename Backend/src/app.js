@@ -6,6 +6,7 @@ import urlRoutes from "./routes/url.routes.js";
 import { getMyUrl } from "./controllers/url.controller.js";
 import authRoutes from "./routes/auth.routes.js";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 
 
 const requiredEnv = ["MONGO_URI", "APP_URL", "PORT", "JWT_SECRET"];
@@ -23,18 +24,23 @@ app.use(
   cors({
     origin: (origin, cb) => {
       
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-      cb(new Error("Not allowed by CORS"));
+      cb(null, !origin || allowedOrigins.includes(origin));
     },
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+const redirectLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 120,
+  message: "Too many requests",
+});
 app.use(express.json({ limit: "10kb" }));
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1", urlRoutes);
-app.get("/:id", getMyUrl);
+app.get("/:id", redirectLimiter, getMyUrl);
 
 
 app.use((req, res) => {

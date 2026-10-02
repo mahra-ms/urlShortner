@@ -17,7 +17,7 @@ const shortUrlSchema = new mongoose.Schema(
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      default: null, 
+      default: null,
       index: true,
     },
 
@@ -25,7 +25,6 @@ const shortUrlSchema = new mongoose.Schema(
       type: Number,
       required: true,
       default: 0,
-      
     },
     claimTokenHash: {
       type: String,
@@ -38,7 +37,10 @@ const shortUrlSchema = new mongoose.Schema(
   },
 );
 
-shortUrlSchema.index({ owner: 1, originalUrl: 1 });
+shortUrlSchema.index(
+  { owner: 1, originalUrl: 1 },
+  { unique: true, partialFilterExpression: { owner: { $type: "objectId" } } },
+);
 const ShortUrl = mongoose.model("ShortUrl", shortUrlSchema);
 
 export default ShortUrl;

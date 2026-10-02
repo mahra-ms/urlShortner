@@ -17,15 +17,17 @@ export function requireAuth(req, res, next) {
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 }
-export function optionalAuth(req,res,next){
-    const token = readToken(req);
-    if(token){
-        try{
-            const payload = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] });;
-            req.user = {id: payload.sub};
-        }catch{
-
-        }
+export function optionalAuth(req, res, next) {
+  const token = readToken(req);
+  if (token) {
+    try {
+      const payload = jwt.verify(token, process.env.JWT_SECRET, {
+        algorithms: ["HS256"],
+      });
+      req.user = { id: payload.sub };
+    } catch {
+     
     }
-    next();
+  }
+  next();
 }
