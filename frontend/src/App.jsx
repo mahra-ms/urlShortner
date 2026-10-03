@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import { useAuth } from "./context/AuthContext.jsx";
 import Layout from "./components/Layout.jsx";
 import AuthModal from "./components/AuthModal.jsx";
@@ -28,6 +29,7 @@ export default function App() {
       </Routes>
       {/* One popup for the whole app */}
       <AuthModal />
+      <Analytics />
     </>
   );
 }
