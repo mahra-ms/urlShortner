@@ -1,5 +1,8 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import Logo from "../components/Logo.jsx";
+import PreviewCard from "../components/PreviewCard.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const features = [
   { t: "Short URLs", d: "Create clean and memorable links in seconds.", p: "M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" },
@@ -8,43 +11,56 @@ const features = [
 ];
 
 export default function Home() {
+  const { user, openAuth } = useAuth();
+  const location = useLocation();
+
+  // Opened here because a protected page needed login
+  useEffect(() => {
+    if (location.state?.needLogin) openAuth("login");
+  }, [location.state, openAuth]);
+
   return (
     <div>
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+      <nav className="mx-auto flex max-w-7.1xl items-center justify-between px-10 py-5 bg-[#efefef]">
         <Logo />
         <div className="flex items-center gap-4">
-          <Link to="/login" className="font-medium">Login</Link>
-          <Link to="/signup" className="btn btn-dark btn-sm">Get Started</Link>
+          {user ? (
+            <Link to="/dashboard" className="btn btn-dark btn-sm">Dashboard</Link>
+          ) : (
+            <>
+              <button onClick={() => openAuth("login")} className="cursor-pointer font-medium">Login</button>
+              <button onClick={() => openAuth("signup")} className="btn btn-dark btn-sm">Get Started</button>
+            </>
+          )}
         </div>
       </nav>
 
-      <section className="mx-auto grid max-w-6xl items-center gap-12 px-6 py-14 md:grid-cols-2">
-        <div>
-          <h1 className="text-4xl font-bold leading-[1.08] tracking-tight md:text-5xl">
+      <section className="px-2 mx-24 grid max-w-7xl items-center gap-5  py-25 md:grid-cols-[0.8fr_1.2fr] font-serif">
+        <div className="w-2xl ">
+          <h1 className="text-xl font-medium text-gray-400 font-serif mx-3">Sample.Fast.Analytics</h1>
+          <h1 className="text-4xl font-bold leading-[1.08] tracking-tight md:text-6xl">
             Turn long URLs into <span className="text-gray-600">short links.</span>
           </h1>
           <p className="my-5 max-w-sm text-base text-gray-700">
             Create powerful short URLs, share them anywhere, and track every click from one simple dashboard.
           </p>
           <div className="flex gap-2.5">
-            <Link to="/signup" className="btn btn-dark">Create Free Account</Link>
-            <Link to="/login" className="btn">Login</Link>
+            {user ? (
+              <Link to="/dashboard" className="btn btn-dark">Go to Dashboard</Link>
+            ) : (
+              <>
+                <button onClick={() => openAuth("signup")} className="btn btn-dark">Create Free Account</button>
+                <button onClick={() => openAuth("login")} className="btn">Login</button>
+              </>
+            )}
           </div>
         </div>
-
-        <div className="card p-6 shadow-sm" aria-hidden="true">
-          <small className="text-xs text-gray-500">Your long URL</small>
-          <div className="mb-4 mt-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">https://example.com/my-very-long-url</div>
-          <small className="text-xs text-gray-500">Your short URL</small>
-          <div className="mt-1.5 flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-            <b>{location.host}/my-url</b><span className="btn btn-dark btn-sm">Copy</span>
-          </div>
-        </div>
+        <PreviewCard />
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-8 px-6 pb-20 pt-8 md:grid-cols-3">
+      <section className="mx-auto pl-30 grid gap-10 px-6 pb-20 pt-8 md:grid-cols-3 bg-[#efefef] font-serif ">
         {features.map((f) => (
-          <div key={f.t}>
+          <div className="cursor-pointer pt-5" key={f.t}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={f.p} /></svg>
             <b className="mb-1 mt-2.5 block">{f.t}</b>
             <p className="text-gray-500">{f.d}</p>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import LineChart from "../components/LineChart.jsx";
 import { api, bare, fmtDate } from "../lib/api.js";
@@ -6,9 +6,20 @@ import { useToast } from "../context/ToastContext.jsx";
 
 const periods = ["day", "week", "month"];
 
+function Stat({ label, value, sub }) {
+  return (
+    <div className="min-w-0 px-5 py-4">
+      <div className="text-xs text-gray-500">{label}</div>
+      <div className="mt-1 truncate text-xl font-bold tracking-tight tabular-nums">{value}</div>
+      {sub && <div className="mt-0.5 truncate text-xs text-gray-500">{sub}</div>}
+    </div>
+  );
+}
+
 export default function Stats() {
   const { id } = useParams();
   const { copy } = useToast();
+
   const [info, setInfo] = useState(null);
   const [geo, setGeo] = useState([]);
   const [series, setSeries] = useState(null);
@@ -17,59 +28,93 @@ export default function Stats() {
 
   useEffect(() => {
     Promise.all([api(`/stats/${id}`), api(`/stats/${id}/geo`)])
-      .then(([s, g]) => { setInfo(s.data); setGeo(g.data); })
-      .catch((e) => setError(e.message));
+      .then(([stats, countries]) => { setInfo(stats.data); setGeo(countries.data); })
+      .catch((err) => setError(err.message));
   }, [id]);
 
   useEffect(() => {
     setSeries(null);
-    api(`/stats/${id}/timeseries?period=${period}`).then((d) => setSeries(d.data)).catch(() => setSeries([]));
+    api(`/stats/${id}/timeseries?period=${period}`)
+      .then((res) => setSeries(res.data))
+      .catch(() => setSeries([]));
   }, [id, period]);
 
-  const top = Math.max(...geo.map((c) => c.clicks), 1);
+  const sortedGeo = useMemo(() => [...geo].sort((a, b) => b.clicks - a.clicks), [geo]);
+  const totalGeo = sortedGeo.reduce((s, c) => s + c.clicks, 0) || 1;
+  const topClicks = sortedGeo[0]?.clicks || 1;
+  const peak = series?.length ? series.reduce((a, b) => (b.clicks > a.clicks ? b : a)) : null;
 
   return (
     <>
-      <Link to="/links" className="mb-3.5 inline-block text-[13px] text-gray-500">← Back to My Links</Link>
-      {error && <div className="card p-7 text-center text-gray-500">{error}</div>}
+      <Link to="/links" className="mb-4 inline-flex items-center gap-1 text-[13px] text-gray-500 hover:text-ink">
+        <span aria-hidden>←</span> My links
+      </Link>
+
+      {error && <div className="card p-10 text-center text-red-700">{error}</div>}
+      {!info && !error && <div className="card p-10 text-center text-gray-500">Loading…</div>}
+
       {info && (
         <>
-          <section className="card mb-5 p-5">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h1 className="text-2xl font-bold tracking-tight">{bare(info.shortUrl)}</h1>
-                <a href={info.originalUrl} target="_blank" rel="noopener noreferrer" className="break-all text-[13px] text-gray-500">{info.originalUrl}</a>
-              </div>
-              <button className="btn btn-sm" onClick={() => copy(info.shortUrl)}>Copy</button>
+          <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="truncate text-2xl font-bold tracking-tight md:text-3xl">{bare(info.shortUrl)}</h1>
+              <a href={info.originalUrl} target="_blank" rel="noopener noreferrer"
+                className="mt-1 block max-w-full break-all text-[13px] text-gray-500 hover:text-ink hover:underline">
+                {info.originalUrl}
+              </a>
             </div>
-            <div className="mt-5 grid grid-cols-2 gap-4 border-t border-gray-200 pt-4">
-              <div><b className="block text-xl">{info.clicks}</b><span className="text-xs text-gray-500">Total clicks</span></div>
-              <div><b className="block text-xl">{fmtDate(info.createdAt)}</b><span className="text-xs text-gray-500">Created at</span></div>
+            <div className="flex gap-2">
+              <a href={info.originalUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm">Visit</a>
+              <button className="btn btn-dark btn-sm" onClick={() => copy(info.shortUrl)}>Copy link</button>
             </div>
+          </header>
+
+          <section className="card mb-5 grid grid-cols-1 divide-y divide-gray-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
+            <Stat label="Total clicks" value={info.clicks.toLocaleString()} />
+            <Stat label="Top country" value={sortedGeo[0]?.country || "–"}
+              sub={sortedGeo[0] ? `${Math.round((sortedGeo[0].clicks / totalGeo) * 100)}% of clicks` : "No clicks yet"} />
+            <Stat label={`Best ${period}`} value={peak ? `${peak.clicks} clicks` : "–"} sub={peak?.period} />
+            <Stat label="Created" value={fmtDate(info.createdAt).split(",").slice(0, 2).join(",")} />
           </section>
 
-          <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-            <section className="card p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <h3 className="font-semibold">Clicks overview</h3>
-                <div className="flex gap-1">
+          <div className="grid items-start gap-5 lg:grid-cols-[1.6fr_1fr]">
+            <section className="card min-w-0 p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <h2 className="font-semibold">Clicks over time</h2>
+                <div className="inline-flex rounded-lg bg-gray-100 p-0.5" role="group" aria-label="Period">
                   {periods.map((p) => (
-                    <button key={p} onClick={() => setPeriod(p)}
-                      className={`cursor-pointer rounded-md px-2.5 py-1 text-xs capitalize ${period === p ? "bg-blue-50 font-semibold text-blue-600" : "text-gray-500"}`}>{p}</button>
+                    <button key={p} onClick={() => setPeriod(p)} aria-pressed={period === p}
+                      className={`cursor-pointer rounded-md px-3 py-1 text-xs font-medium capitalize ${period === p ? "bg-white text-ink shadow-sm" : "text-gray-500 hover:text-ink"}`}>
+                      {p}
+                    </button>
                   ))}
                 </div>
               </div>
-              {series ? <LineChart data={series} /> : <p className="p-7 text-center text-gray-500">Loading…</p>}
+              {series ? <LineChart data={series} /> : <p className="p-10 text-center text-gray-500">Loading…</p>}
             </section>
 
-            <section className="card p-5">
-              <h3 className="mb-1 font-semibold">Clicks by country</h3>
-              {geo.length ? geo.map((c) => (
-                <div key={c.country} className="mt-3.5">
-                  <div className="flex justify-between text-[13px]"><span>{c.country}</span><b>{c.clicks}</b></div>
-                  <div className="mt-1 h-1.5 rounded bg-blue-50"><div className="h-full rounded bg-blue-600" style={{ width: `${(c.clicks / top) * 100}%` }} /></div>
-                </div>
-              )) : <p className="p-7 text-center text-gray-500">No clicks yet.</p>}
+            <section className="card min-w-0 p-5">
+              <h2 className="font-semibold">Clicks by country</h2>
+              {sortedGeo.length > 0 ? (
+                <ul className="mt-2">
+                  {sortedGeo.map((c) => (
+                    <li key={c.country} className="mt-3.5">
+                      <div className="flex justify-between gap-2 text-[13px]">
+                        <span className="truncate">{c.country}</span>
+                        <span className="shrink-0 tabular-nums">
+                          <b>{c.clicks}</b>
+                          <span className="ml-1.5 text-xs text-gray-500">{Math.round((c.clicks / totalGeo) * 100)}%</span>
+                        </span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 rounded-full bg-gray-100">
+                        <div className="h-full rounded-full bg-blue-600" style={{ width: `${(c.clicks / topClicks) * 100}%` }} />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="py-10 text-center text-[13px] text-gray-500">No clicks yet. Share your link to see where visitors come from.</p>
+              )}
             </section>
           </div>
         </>

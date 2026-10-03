@@ -7,6 +7,7 @@ export const useAuth = () => useContext(AuthCtx);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(!!localStorage.getItem("token"));
+  const [modal, setModal] = useState(null); // null | "login" | "signup"
 
   useEffect(() => {
     if (!localStorage.getItem("token")) return;
@@ -21,6 +22,12 @@ export function AuthProvider({ children }) {
 
   const signIn = useCallback((token, u) => { localStorage.setItem("token", token); setUser(u); }, []);
   const signOut = useCallback(() => { localStorage.removeItem("token"); setUser(null); }, []);
+  const openAuth = useCallback((mode = "login") => setModal(mode), []);
+  const closeAuth = useCallback(() => setModal(null), []);
 
-  return <AuthCtx.Provider value={{ user, loading, signIn, signOut }}>{children}</AuthCtx.Provider>;
+  return (
+    <AuthCtx.Provider value={{ user, loading, signIn, signOut, modal, openAuth, closeAuth }}>
+      {children}
+    </AuthCtx.Provider>
+  );
 }

@@ -9,10 +9,13 @@
 body { @apply bg-gray-50 text-ink text-sm antialiased; }
 :focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 
+/* Reusable classes: write them once, use them everywhere */
 @layer components {
-  .btn { @apply inline-flex items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 font-medium cursor-pointer hover:bg-gray-50 disabled:opacity-60 disabled:cursor-wait; }
+  /* Button. FIX: whitespace-nowrap + shrink-0 so text never wraps and the button never gets squeezed */
+  .btn { @apply inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-gray-200 bg-white px-4 py-2.5 font-medium cursor-pointer hover:bg-gray-50 disabled:opacity-60 disabled:cursor-wait; }
   .btn-dark { @apply bg-dark border-dark text-white hover:bg-black; }
   .btn-sm { @apply px-3 py-1.5 text-[13px]; }
-  .input { @apply w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5; }
+  /* Text input. FIX: min-w-0 lets it shrink properly inside a flex row */
+  .input { @apply w-full min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2.5; }
   .card { @apply rounded-xl border border-gray-200 bg-white; }
 }
