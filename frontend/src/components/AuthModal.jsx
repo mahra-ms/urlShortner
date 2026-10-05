@@ -51,13 +51,13 @@ export default function AuthModal() {
 
   return (
     // Dark backdrop. Clicking it closes the popup.
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/50 p-6"
+    <div className="fixed inset-0 z-50 flex overflow-y-auto bg-black/50 p-4 sm:p-6"
       onClick={closeAuth}>
       {/* stopPropagation so clicks inside the box don't close it */}
-      <div role="dialog" aria-modal="true" className="card relative w-full max-w-sm p-8"
+      <div role="dialog" aria-modal="true" className="card relative m-auto w-full max-w-sm p-6 sm:p-8"
         onClick={(e) => e.stopPropagation()}>
         <button type="button" aria-label="Close" onClick={closeAuth}
-          className="absolute right-4 top-3 cursor-pointer text-2xl leading-none text-gray-400 hover:text-ink">
+          className="absolute right-2 top-2 grid h-10 w-10 cursor-pointer place-items-center text-2xl leading-none text-gray-400 hover:text-ink">
           ×
         </button>
 
@@ -73,10 +73,10 @@ export default function AuthModal() {
             </>
           )}
           <label htmlFor="email" className={labelCls}>Email</label>
-          <input id="email" type="email" className="input" placeholder="you@example.com" autoComplete="email"  onChange={set("email")} />
+          <input id="email" type="email" className="input" placeholder="you@example.com" autoComplete="email" value={form.email} onChange={set("email")} />
           <label htmlFor="password" className={labelCls}>Password</label>
           <input id="password" type="password" className="input" placeholder={signup ? "Minimum 8 characters" : "Your password"}
-            autoComplete={signup ? "new-password" : "current-password"}  onChange={set("password")} />
+            autoComplete={signup ? "new-password" : "current-password"} value={form.password} onChange={set("password")} />
           <p role="alert" className="mt-2.5 min-h-[18px] text-[13px] text-red-700">{error}</p>
           <button className="btn btn-dark mt-3 w-full" disabled={busy}>{signup ? "Create account" : "Login"}</button>
         </form>

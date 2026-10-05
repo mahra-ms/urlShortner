@@ -35,8 +35,8 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[240px_1fr]">
-      <aside className="flex items-center gap-1 overflow-x-auto bg-dark p-3 md:sticky md:top-0 md:h-screen md:flex-col md:items-stretch md:gap-1 md:overflow-visible md:p-4">
-        <div className="mr-3 shrink-0 md:mb-5 md:mr-0 md:border-b md:border-white/10 md:px-3 md:pb-5">
+      <aside className="sticky top-0 z-30 flex items-center gap-1 overflow-x-auto bg-dark p-2.5 md:z-auto md:sticky md:top-0 md:h-screen md:flex-col md:items-stretch md:gap-1 md:overflow-visible md:p-4">
+        <div className="mr-2 shrink-0 md:mb-5 md:mr-0 md:border-b md:border-white/10 md:px-3 md:pb-5">
           <Logo light />
         </div>
 
@@ -58,10 +58,10 @@ export default function Layout() {
               <div className="truncate text-xs text-gray-400">{user?.email}</div>
             </div>
           </div>
-          <button onClick={handleLogout}
+          <button onClick={handleLogout} aria-label="Logout"
             className={`${rowStyle} cursor-pointer text-gray-400 hover:bg-white/5 hover:text-white`}>
             <Icon d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
-            Logout
+            <span className="hidden md:inline">Logout</span>
           </button>
         </div>
       </aside>

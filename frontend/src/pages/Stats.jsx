@@ -8,7 +8,7 @@ const periods = ["day", "week", "month"];
 
 function Stat({ label, value, sub }) {
   return (
-    <div className="min-w-0 px-5 py-4">
+    <div className="min-w-0 bg-white px-4 py-3.5 sm:px-5 sm:py-4">
       <div className="text-xs text-gray-500">{label}</div>
       <div className="mt-1 truncate text-xl font-bold tracking-tight tabular-nums">{value}</div>
       {sub && <div className="mt-0.5 truncate text-xs text-gray-500">{sub}</div>}
@@ -69,7 +69,7 @@ export default function Stats() {
             </div>
           </header>
 
-          <section className="card mb-5 grid grid-cols-1 divide-y divide-gray-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
+          <section className="card mb-5 grid grid-cols-2 gap-px overflow-hidden bg-gray-200 lg:grid-cols-4">
             <Stat label="Total clicks" value={info.clicks.toLocaleString()} />
             <Stat label="Top country" value={sortedGeo[0]?.country || "–"}
               sub={sortedGeo[0] ? `${Math.round((sortedGeo[0].clicks / totalGeo) * 100)}% of clicks` : "No clicks yet"} />
@@ -78,7 +78,7 @@ export default function Stats() {
           </section>
 
           <div className="grid items-start gap-5 lg:grid-cols-[1.6fr_1fr]">
-            <section className="card min-w-0 p-5">
+            <section className="card min-w-0 p-4 sm:p-5">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="font-semibold">Clicks over time</h2>
                 <div className="inline-flex rounded-lg bg-gray-100 p-0.5" role="group" aria-label="Period">
