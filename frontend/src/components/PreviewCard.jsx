@@ -41,7 +41,7 @@ export default function PreviewCard() {
   }
 
   return (
-    <div className="overflow-hidden  rounded-2xl border border-gray-200 bg-white shadow-lg font-mono">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg font-mono">
       {/* Top bar with 3 dots */}
       <div className="flex gap-1.5 bg-gray-100 px-4 py-3">
         <span className="h-2.5 w-2.5 rounded-full bg-yellow-300" />
@@ -49,11 +49,11 @@ export default function PreviewCard() {
         <span className="h-2.5 w-2.5 rounded-full bg-red-300" />
       </div>
 
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* ---------- Step 1: paste a link + Generate button ---------- */}
         <form onSubmit={handleGenerate}>
           <label htmlFor="long-url" className="mb-2 block text-[13px] text-gray-600">Your long URL</label>
-          <div className="flex items-stretch gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
             <input id="long-url" type="url" required
               className="input min-w-0 flex-1 bg-gray-50 px-4 py-3"
               placeholder="https://example.com/my-very-long-url"

@@ -21,7 +21,7 @@ export default function Home() {
 
   return (
     <div>
-      <nav className="mx-auto flex max-w-7.1xl items-center justify-between px-10 py-5 bg-[#efefef]">
+      <nav className="flex items-center justify-between bg-[#efefef] px-4 py-4 md:px-10 md:py-5">
         <Logo />
         <div className="flex items-center gap-4">
           {user ? (
@@ -35,16 +35,16 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="px-2 mx-24 grid max-w-7xl items-center gap-5  py-25 md:grid-cols-[0.8fr_1.2fr] font-serif">
-        <div className="w-2xl ">
-          <h1 className="text-xl font-medium text-gray-400 font-serif mx-3">Sample.Fast.Analytics</h1>
-          <h1 className="text-4xl font-bold leading-[1.08] tracking-tight md:text-6xl">
+      <section className="mx-auto grid max-w-7xl items-center gap-8 px-4 py-10 font-serif md:px-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-5 lg:px-24 lg:py-24">
+        <div className="min-w-0 xl:w-2xl">
+          <h1 className="mb-2 text-lg font-medium text-gray-400 font-serif md:text-xl">Sample.Fast.Analytics</h1>
+          <h1 className="text-4xl font-bold leading-[1.08] tracking-tight md:text-5xl xl:text-6xl">
             Turn long URLs into <span className="text-gray-600">short links.</span>
           </h1>
           <p className="my-5 max-w-sm text-base text-gray-700">
             Create powerful short URLs, share them anywhere, and track every click from one simple dashboard.
           </p>
-          <div className="flex gap-2.5">
+          <div className="flex flex-wrap gap-2.5">
             {user ? (
               <Link to="/dashboard" className="btn btn-dark">Go to Dashboard</Link>
             ) : (
@@ -58,9 +58,9 @@ export default function Home() {
         <PreviewCard />
       </section>
 
-      <section className="mx-auto pl-30 grid gap-10 px-6 pb-20 pt-8 md:grid-cols-3 bg-[#efefef] font-serif ">
+      <section className="grid gap-6 bg-[#efefef] px-4 pb-12 pt-6 font-serif md:grid-cols-3 md:gap-10 md:px-10 md:pb-20 lg:px-24">
         {features.map((f) => (
-          <div className="cursor-pointer pt-5" key={f.t}>
+          <div className="pt-2 md:pt-5" key={f.t}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={f.p} /></svg>
             <b className="mb-1 mt-2.5 block">{f.t}</b>
             <p className="text-gray-500">{f.d}</p>
