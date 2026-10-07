@@ -4,36 +4,29 @@ import { api, bare, idOf } from "../lib/api.js";
 import { useToast } from "../context/ToastContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 
-
 const boxStyle = "rounded-lg border border-gray-200 bg-gray-50 px-4 py-3";
 
 export default function PreviewCard() {
   const { copy } = useToast();
   const { openAuth } = useAuth();
 
-  const [longUrl, setLongUrl] = useState("");   // what the user types
+  const [longUrl, setLongUrl] = useState(""); // what the user types
   const [shortUrl, setShortUrl] = useState(""); // result from the server
-  const [stats, setStats] = useState(null);     // { clicks, createdAt }
-  const [series, setSeries] = useState([]);     // chart data
+  const [stats, setStats] = useState(null); // { clicks, createdAt }
+  const [series, setSeries] = useState([]); // chart data
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-
 
   async function handleGenerate(e) {
     e.preventDefault();
     setBusy(true);
     setError("");
     try {
-      const res = await api("/", { method: "POST", body: { url: longUrl.trim() } });
+      const res = await api("/", {
+        method: "POST",
+        body: { url: longUrl.trim() },
+      });
       setShortUrl(res.shortUrl);
-
-      const id = idOf(res.shortUrl);
-      const [info, chart] = await Promise.all([
-        api(`/stats/${id}`),
-        api(`/stats/${id}/timeseries?period=day`),
-      ]);
-      setStats(info.data);
-      setSeries(chart.data);
     } catch (err) {
       setError(err.message);
     }
@@ -52,12 +45,22 @@ export default function PreviewCard() {
       <div className="p-4 sm:p-6">
         {/* ---------- Step 1: paste a link + Generate button ---------- */}
         <form onSubmit={handleGenerate}>
-          <label htmlFor="long-url" className="mb-2 block text-[13px] text-gray-600">Your long URL</label>
+          <label
+            htmlFor="long-url"
+            className="mb-2 block text-[13px] text-gray-600"
+          >
+            Your long URL
+          </label>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
-            <input id="long-url" type="url" required
+            <input
+              id="long-url"
+              type="url"
+              required
               className="input min-w-0 flex-1 bg-gray-50 px-4 py-3"
               placeholder="https://example.com/my-very-long-url"
-              value={longUrl} onChange={(e) => setLongUrl(e.target.value)} />
+              value={longUrl}
+              onChange={(e) => setLongUrl(e.target.value)}
+            />
             <button className="btn btn-dark px-5" disabled={busy}>
               {busy ? "Wait…" : "Generate"}
             </button>
@@ -65,8 +68,11 @@ export default function PreviewCard() {
           {error && (
             <p role="alert" className="mt-2 text-[13px] text-red-700">
               {error}.{" "}
-              <button type="button" onClick={() => openAuth("login")}
-                className="cursor-pointer font-semibold underline">
+              <button
+                type="button"
+                onClick={() => openAuth("login")}
+                className="cursor-pointer font-semibold underline"
+              >
                 Login
               </button>{" "}
               to view Analytics
@@ -82,14 +88,20 @@ export default function PreviewCard() {
         {/* ---------- Step 2: short URL + Copy button ---------- */}
         <p className="mb-2 text-[13px] text-gray-600">Your short URL</p>
         <div className="flex items-stretch gap-3">
-          <div className={`${boxStyle} min-w-0 flex-1 truncate ${shortUrl ? "font-semibold" : "text-gray-400"}`}>
+          <div
+            className={`${boxStyle} min-w-0 flex-1 truncate ${shortUrl ? "font-semibold" : "text-gray-400"}`}
+          >
             {shortUrl ? bare(shortUrl) : "shortUrl"}
           </div>
-          <button type="button" className="btn btn-dark px-6" disabled={!shortUrl} onClick={() => copy(shortUrl)}>
+          <button
+            type="button"
+            className="btn btn-dark px-6"
+            disabled={!shortUrl}
+            onClick={() => copy(shortUrl)}
+          >
             Copy
           </button>
         </div>
-
       </div>
     </div>
   );
