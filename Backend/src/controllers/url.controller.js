@@ -15,6 +15,11 @@ async function findOwnedUrl(shortId, userId) {
 
 const APP_HOST = new URL(process.env.APP_URL).hostname;
 
+const getClientIp = (req) => {
+  const ip = req.headers["cf-connecting-ip"] || req.ip || "";
+  return ip.replace(/^::ffff:/, "");
+};
+
 function isAllowedUrl(value) {
   try {
     const parsed = new URL(value);
@@ -85,7 +90,7 @@ export async function createShorturl(req, res) {
               });
             }
           }
-          continue; 
+          continue;
         }
         throw err;
       }
@@ -117,11 +122,25 @@ export const getMyUrl = async (req, res) => {
       return res.status(404).send("Not Found");
     }
 
-    const geo = geoip.lookup(req.ip);
+    const clientIp = getClientIp(req);
+    const geo = geoip.lookup(clientIp);
+    const cfCountry = req.headers["cf-ipcountry"];
+
+    console.log("GEO DEBUG ->", {
+      ip: req.ip,
+      xff: req.headers["x-forwarded-for"],
+      cf: req.headers["cf-connecting-ip"],
+      clientIp,
+      geo,
+    });
 
     Click.create({
       shortUrl: id,
-      country: geo?.country || "Unknown",
+      country:
+        geo?.country ||
+        (cfCountry && cfCountry !== "XX" && cfCountry !== "T1"
+          ? cfCountry
+          : "Unknown"),
       region: geo?.region || "Unknown",
     }).catch((err) => console.error("Click logging failed:", err));
 
