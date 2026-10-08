@@ -45,6 +45,7 @@ export default function Links() {
       <section className="card overflow-hidden">
         {error ? <p className="p-10 text-center text-red-700">{error}</p>
           : urls ? <LinksTable urls={shown}
+              onDeleted={(u) => setUrls((prev) => prev.filter((x) => x.shortUrl !== u.shortUrl))}
               empty={q ? { title: "No matching links", hint: "Try a different search term." } : undefined} />
           : <p className="p-10 text-center text-gray-500">Loading…</p>}
       </section>

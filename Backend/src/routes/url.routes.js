@@ -7,6 +7,7 @@ import {
   getClicksOverTime,
   getUrlStats,
   getMyUrls,
+  deleteUrl, 
 } from "../controllers/url.controller.js";
 import { requireAuth, optionalAuth } from "../middleware/auth.js";
 
@@ -23,8 +24,9 @@ const readLimiter = rateLimit({
 });
 
 router.post("/", createLimiter, optionalAuth, createShorturl);
-router.post("/claim", readLimiter, requireAuth, claimUrl); // public
-router.get("/my-urls", readLimiter, requireAuth, getMyUrls);   // login required
+router.post("/claim", readLimiter, requireAuth, claimUrl); 
+router.get("/my-urls", readLimiter, requireAuth, getMyUrls);
+router.delete("/:id", readLimiter, requireAuth, deleteUrl);   
 router.get("/stats/:id", readLimiter, requireAuth, getUrlStats);
 router.get("/stats/:id/geo", readLimiter, requireAuth, getClicksByCountry);
 router.get("/stats/:id/timeseries", readLimiter, requireAuth, getClicksOverTime);

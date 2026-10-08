@@ -25,7 +25,7 @@ function isAllowedUrl(value) {
     const parsed = new URL(value);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:")
       return false;
-    if (parsed.hostname === APP_HOST) return false; // prevents redirect loops
+    if (parsed.hostname === APP_HOST) return false; 
     return true;
   } catch {
     return false;
@@ -104,6 +104,34 @@ export async function createShorturl(req, res) {
     return res.status(500).json({ message: "Unable to create short URL" });
   }
 }
+
+
+export const deleteUrl = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+   
+    const deleted = await ShortUrl.findOneAndDelete({
+      shortUrl: id,
+      owner: req.user.id,
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ message: "short url not found" });
+    }
+
+ 
+    await Click.deleteMany({ shortUrl: id });
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Short URL deleted" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "server error" });
+  }
+};
+
 
 export const getMyUrl = async (req, res) => {
   try {

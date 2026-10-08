@@ -72,7 +72,6 @@ export default function Dashboard() {
           <button className="btn btn-dark px-6" disabled={busy}>{busy ? "Shortening…" : "Shorten"}</button>
         </form>
         {error && <p role="alert" className="mt-2.5 text-[13px] text-red-700">{error}</p>}
-       
       </section>
 
       {/* Recent */}
@@ -82,7 +81,9 @@ export default function Dashboard() {
           <Link to="/links" className="text-[13px] font-medium text-blue-600 hover:underline">View all</Link>
         </div>
         <div className="border-t border-gray-200">
-          {urls ? <LinksTable urls={urls.slice(0, 5)} /> : <p className="p-10 text-center text-gray-500">Loading…</p>}
+          {urls
+            ? <LinksTable urls={urls.slice(0, 5)} onDeleted={loadUrls} />
+            : <p className="p-10 text-center text-gray-500">Loading…</p>}
         </div>
       </section>
     </>

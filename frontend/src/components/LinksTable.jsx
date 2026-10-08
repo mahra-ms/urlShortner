@@ -1,23 +1,62 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../context/ToastContext.jsx";
-import { bare, fmtDate, idOf } from "../lib/api.js";
+import { api, bare, fmtDate, idOf } from "../lib/api.js";
 
-const hostOf = (u) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return u; } };
+const hostOf = (u) => {
+  try {
+    return new URL(u).hostname.replace(/^www\./, "");
+  } catch {
+    return u;
+  }
+};
 
-export default function LinksTable({ urls, empty }) {
+export default function LinksTable({ urls, empty, onDeleted }) {
   const navigate = useNavigate();
-  const { copy } = useToast();
+  const { copy, show } = useToast();
+  const [deleting, setDeleting] = useState(null);
+
+  async function handleDelete(e, u) {
+    e.stopPropagation(); // don't open the stats page
+    if (
+      !window.confirm(
+        `Delete ${bare(u.shortUrl)}?\n\nThe link will stop working and its analytics will be removed.`,
+      )
+    )
+      return;
+    setDeleting(u.shortUrl);
+    try {
+      await api(`/${idOf(u.shortUrl)}`, { method: "DELETE" });
+      show("Link deleted");
+      onDeleted?.(u);
+    } catch (err) {
+      show(err.message);
+    }
+    setDeleting(null);
+  }
 
   if (urls.length === 0) {
     return (
       <div className="px-6 py-14 text-center">
         <div className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-gray-100 text-gray-400">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" />
           </svg>
         </div>
         <p className="font-semibold">{empty?.title || "No links yet"}</p>
-        <p className="mt-1 text-[13px] text-gray-500">{empty?.hint || "Paste a long URL above to create your first short link."}</p>
+        <p className="mt-1 text-[13px] text-gray-500">
+          {empty?.hint ||
+            "Paste a long URL above to create your first short link."}
+        </p>
       </div>
     );
   }
@@ -29,22 +68,32 @@ export default function LinksTable({ urls, empty }) {
           <tr className="border-b border-gray-200 text-left text-xs font-medium text-gray-500">
             <th className="px-3 py-3 font-medium sm:px-5">Link</th>
             <th className="px-3 py-3 text-right font-medium">Clicks</th>
-            <th className="hidden px-3 py-3 font-medium sm:table-cell">Created</th>
-            <th className="w-12 px-3 py-3 sm:w-24 sm:px-5" />
+            <th className="hidden px-3 py-3 font-medium sm:table-cell">
+              Created
+            </th>
+            <th className="w-24 px-3 py-3 sm:w-44 sm:px-5" />
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {urls.map((u) => (
-            <tr key={u.shortUrl} onClick={() => navigate(`/stats/${idOf(u.shortUrl)}`)}
-              className="group cursor-pointer transition-colors hover:bg-gray-50">
+            <tr
+              key={u.shortUrl}
+              onClick={() => navigate(`/stats/${idOf(u.shortUrl)}`)}
+              className="group cursor-pointer transition-colors hover:bg-gray-50"
+            >
               <td className="px-3 py-3.5 sm:px-5">
                 <div className="flex items-center gap-2.5 sm:gap-3">
                   <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gray-100 text-xs font-bold uppercase text-gray-600">
                     {hostOf(u.originalUrl).charAt(0)}
                   </div>
                   <div className="min-w-0">
-                    <div className="font-semibold text-ink">{bare(u.shortUrl)}</div>
-                    <div className="max-w-[8.5rem] truncate text-xs text-gray-500 min-[400px]:max-w-[12rem] sm:max-w-xs md:max-w-md" title={u.originalUrl}>
+                    <div className="font-semibold text-ink">
+                      {bare(u.shortUrl)}
+                    </div>
+                    <div
+                      className="max-w-[8.5rem] truncate text-xs text-gray-500 min-[400px]:max-w-[12rem] sm:max-w-xs md:max-w-md"
+                      title={u.originalUrl}
+                    >
                       {u.originalUrl}
                     </div>
                   </div>
@@ -55,15 +104,57 @@ export default function LinksTable({ urls, empty }) {
                   {u.clicks}
                 </span>
               </td>
-              <td className="hidden whitespace-nowrap px-3 py-3.5 text-gray-500 sm:table-cell">{fmtDate(u.createdAt)}</td>
+              <td className="hidden whitespace-nowrap px-3 py-3.5 text-gray-500 sm:table-cell">
+                {fmtDate(u.createdAt)}
+              </td>
               <td className="px-3 py-3.5 text-right sm:px-5">
-                <button className="btn btn-sm !px-2.5 sm:!px-3" aria-label={`Copy ${bare(u.shortUrl)}`}
-                  onClick={(e) => { e.stopPropagation(); copy(u.shortUrl); }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                  </svg>
-                  <span className="hidden sm:inline">Copy</span>
-                </button>
+                <div className="flex justify-end gap-1.5">
+                  <button
+                    className="btn btn-sm !px-2.5 sm:!px-3"
+                    aria-label={`Copy ${bare(u.shortUrl)}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copy(u.shortUrl);
+                    }}
+                  >
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <rect x="9" y="9" width="12" height="12" rx="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                    <span className="hidden sm:inline">Copy</span>
+                  </button>
+                  <button
+                    className="btn btn-sm !px-2.5 hover:!border-red-200 hover:!bg-red-50 hover:!text-red-700 sm:!px-3"
+                    aria-label={`Delete ${bare(u.shortUrl)}`}
+                    disabled={deleting === u.shortUrl}
+                    onClick={(e) => handleDelete(e, u)}
+                  >
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" />
+                    </svg>
+                    <span className="hidden sm:inline">
+                      {deleting === u.shortUrl ? "Deleting…" : "Delete"}
+                    </span>
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

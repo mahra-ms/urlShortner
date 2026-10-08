@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import LineChart from "../components/LineChart.jsx";
 import { api, bare, fmtDate } from "../lib/api.js";
 import { useToast } from "../context/ToastContext.jsx";
@@ -22,13 +22,33 @@ function Stat({ label, value, sub }) {
 
 export default function Stats() {
   const { id } = useParams();
-  const { copy } = useToast();
+  const { copy, show } = useToast();
+  const navigate = useNavigate();
 
   const [info, setInfo] = useState(null);
   const [geo, setGeo] = useState([]);
   const [series, setSeries] = useState(null);
   const [period, setPeriod] = useState("day");
   const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (
+      !window.confirm(
+        "Delete this link?\n\nIt will stop working and its analytics will be removed.",
+      )
+    )
+      return;
+    setDeleting(true);
+    try {
+      await api(`/${id}`, { method: "DELETE" });
+      show("Link deleted");
+      navigate("/links", { replace: true });
+    } catch (err) {
+      show(err.message);
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     Promise.all([api(`/stats/${id}`), api(`/stats/${id}/geo`)])
@@ -97,6 +117,13 @@ export default function Stats() {
               >
                 Visit
               </a>
+              <button
+                className="btn btn-sm hover:!border-red-200 hover:!bg-red-50 hover:!text-red-700"
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
               <button
                 className="btn btn-dark btn-sm"
                 onClick={() => copy(info.shortUrl)}
