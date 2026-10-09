@@ -16,10 +16,10 @@ export default function AuthModal() {
   const signup = modal === "signup";
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
-  // Clear the error when switching between login / signup
+
   useEffect(() => { setError(""); setBusy(false); }, [modal]);
 
-  // Close on Escape + stop the page behind from scrolling
+
   useEffect(() => {
     if (!modal) return;
     const onKey = (e) => e.key === "Escape" && closeAuth();
@@ -50,10 +50,10 @@ export default function AuthModal() {
   }
 
   return (
-    // Dark backdrop. Clicking it closes the popup.
+  
     <div className="fixed inset-0 z-50 flex overflow-y-auto bg-black/50 p-4 sm:p-6"
       onClick={closeAuth}>
-      {/* stopPropagation so clicks inside the box don't close it */}
+  
       <div role="dialog" aria-modal="true" className="card relative m-auto w-full max-w-sm p-6 sm:p-8"
         onClick={(e) => e.stopPropagation()}>
         <button type="button" aria-label="Close" onClick={closeAuth}

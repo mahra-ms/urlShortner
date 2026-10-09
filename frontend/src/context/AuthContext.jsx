@@ -7,7 +7,7 @@ export const useAuth = () => useContext(AuthCtx);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(!!localStorage.getItem("token"));
-  const [modal, setModal] = useState(null); // null | "login" | "signup"
+  const [modal, setModal] = useState(null); 
 
   useEffect(() => {
     if (!localStorage.getItem("token")) return;

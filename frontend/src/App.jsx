@@ -8,7 +8,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Links from "./pages/Links.jsx";
 import Stats from "./pages/Stats.jsx";
 
-// Logged-out users go back to Home, which opens the login popup
+
 function Protected({ children }) {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -27,7 +27,7 @@ export default function App() {
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {/* One popup for the whole app */}
+  
       <AuthModal />
       <Analytics />
     </>

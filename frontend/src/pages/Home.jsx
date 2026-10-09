@@ -14,7 +14,7 @@ export default function Home() {
   const { user, openAuth } = useAuth();
   const location = useLocation();
 
-  // Opened here because a protected page needed login
+
   useEffect(() => {
     if (location.state?.needLogin) openAuth("login");
   }, [location.state, openAuth]);
