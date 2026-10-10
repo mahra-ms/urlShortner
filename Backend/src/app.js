@@ -43,6 +43,7 @@ app.use("/api/v1", urlRoutes);
 app.get("/:id", redirectLimiter, getMyUrl);
 
 
+
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });
 });
@@ -58,3 +59,4 @@ await connectDb();
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+
